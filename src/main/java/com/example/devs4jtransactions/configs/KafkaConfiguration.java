@@ -18,7 +18,7 @@ import java.util.Map;
 @Configuration
 public class KafkaConfiguration {
 
-//consumer
+//configuracion consumer
     @Bean
     public Map<String, Object> consumerProps() {
         Map<String, Object>props=new HashMap<>();
@@ -30,7 +30,7 @@ public class KafkaConfiguration {
         return props;
     }
 
-    //producer
+    //configuracion producer
     private Map<String, Object> producerProps() { Map<String, Object> props=new HashMap<>();
         props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 

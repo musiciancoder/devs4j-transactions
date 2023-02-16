@@ -5,6 +5,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.javafaker.Faker;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.index.IndexResponse;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,8 +39,12 @@ public class Devs4jTransactionsApplication {
 	@Autowired
 	private ObjectMapper mapper;
 
+	@Autowired
+	private RestHighLevelClient client;
+
 	private static  final Logger log = LoggerFactory.getLogger(Devs4jTransactionsApplication.class);
 
+	//consumer
 	@KafkaListener(topics="devs4j-transactions", groupId = "devs4jGroup",
 			containerFactory = "kafkaListenerContainerFactory") //el mismo de la clase KafkaConfiguration
     public void listen(List<ConsumerRecord>messages) throws JsonProcessingException { //inicialmente estaba como List<ConsumerRecord>messages
@@ -45,12 +54,35 @@ public class Devs4jTransactionsApplication {
 
 
 		for(ConsumerRecord<String,String>message:messages){
-	//		Devs4jTransaction transaction = mapper.readValue(message.value(), Devs4jTransaction.class); //por ahora lo dejó comentado
-			log.info("Partition= {} Offset ={} Key={} Message={}", message.partition(), message.offset(), message.key(), message.value());
+	//		Devs4jTransaction transaction = mapper.readValue(message.value(), Devs4jTransaction.class); //por ahora lo dejó comentado TODO
+	//		log.info("Partition= {} Offset ={} Key={} Message={}", message.partition(), message.offset(), message.key(), message.value()); // Lo comentó en seccion Integrando cliente de Elasticsearch al consumer de Kafka
+	//el siguiente código lo agregó en seccion  Integrando cliente de Elasticsearch al consumer de Kafka
+		   IndexRequest indexRequest= buildIndexRequest(
+				   String.format("%s-%s%s", message.partition(), message.key(), message.offset()), message.value());
+		client.indexAsync(indexRequest, RequestOptions.DEFAULT, new ActionListener<IndexResponse>() {
+			@Override
+			public void onResponse(IndexResponse indexResponse) {
+				log.debug("successful request");
+			}
+
+			@Override
+			public void onFailure(Exception e) {
+				log.debug("error storing the message {}", e);
+
+			}
+		});
 		}
 	}
 
+	private IndexRequest buildIndexRequest (String key, String value){
+      IndexRequest request= new IndexRequest("devs4j-transactions");
+	  request.id(key);
+	  request.source(value);
+	  return request;
+	}
 
+
+	//producer
 	@Scheduled(fixedRate = 15000)
 	public void sendMessages() throws JsonProcessingException { //Propagacion de excepcion para mapper.writeValueAsString
 		Faker faker = new Faker();
