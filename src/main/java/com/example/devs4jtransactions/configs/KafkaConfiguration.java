@@ -1,5 +1,6 @@
 package com.example.devs4jtransactions.configs;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.IntegerDeserializer;
@@ -46,6 +47,10 @@ public class KafkaConfiguration {
         return template;
     }
 
+    @Bean
+    public ObjectMapper mapper(){
+        return new ObjectMapper();
+    }
 
     //factory para el consumer
     @Bean
