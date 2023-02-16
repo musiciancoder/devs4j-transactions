@@ -10,6 +10,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -58,7 +59,7 @@ public class Devs4jTransactionsApplication {
 	//		log.info("Partition= {} Offset ={} Key={} Message={}", message.partition(), message.offset(), message.key(), message.value()); // Lo comentó en seccion Integrando cliente de Elasticsearch al consumer de Kafka
 	//el siguiente código lo agregó en seccion  Integrando cliente de Elasticsearch al consumer de Kafka
 		   IndexRequest indexRequest= buildIndexRequest(
-				   String.format("%s-%s%s", message.partition(), message.key(), message.offset()), message.value());
+				   String.format("%s-%s-%s", message.partition(), message.key(), message.offset()), message.value());
 		client.indexAsync(indexRequest, RequestOptions.DEFAULT, new ActionListener<IndexResponse>() {
 			@Override
 			public void onResponse(IndexResponse indexResponse) {
@@ -77,7 +78,7 @@ public class Devs4jTransactionsApplication {
 	private IndexRequest buildIndexRequest (String key, String value){
       IndexRequest request= new IndexRequest("devs4j-transactions");
 	  request.id(key);
-	  request.source(value);
+	  request.source(value, XContentType.JSON); //porque en este caso estamos indexando un json
 	  return request;
 	}
 
@@ -86,13 +87,13 @@ public class Devs4jTransactionsApplication {
 	@Scheduled(fixedRate = 15000)
 	public void sendMessages() throws JsonProcessingException { //Propagacion de excepcion para mapper.writeValueAsString
 		Faker faker = new Faker();
-		for (int i = 0; i < 100000; i++) {
+		for (int i = 0; i < 10000; i++) {
 
 			Devs4jTransaction transaction = new Devs4jTransaction();
 			transaction.setUsername(faker.name().username());
 			transaction.setNombre(faker.name().firstName());
 			transaction.setApellido(faker.name().lastName());
-			transaction.setMonto(faker.number().randomDouble(4, 0, 2000000));
+			transaction.setMonto(faker.number().randomDouble(4, 0, 50000));
 		//	kafkaTemplate.send("devs4j-transactions","key","Mensaje " + i); //lo comentó en sección  Generando transacciones de ejemplo con Java Faker
 			kafkaTemplate.send("devs4j-transactions", transaction.getUsername(),mapper.writeValueAsString(transaction));
 		}

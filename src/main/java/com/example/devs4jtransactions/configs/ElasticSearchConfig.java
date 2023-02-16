@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 
-//clase  cliente de ElasticSearch para conectarnos hacia nuestro dominio
+//clase  cliente de ElasticSearch q se conecta hacia nuestro dominio
 @Configuration
 public class ElasticSearchConfig {
 
