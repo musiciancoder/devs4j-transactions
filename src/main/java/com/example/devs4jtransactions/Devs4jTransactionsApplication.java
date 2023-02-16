@@ -23,6 +23,11 @@ import java.util.List;
 @EnableScheduling
 public class Devs4jTransactionsApplication {
 
+	//diez mil mensajes cada quince segundos
+
+	//Lo comentó en seccion Probando el RestHighLevelClient
+
+
 	@Autowired
 	private KafkaTemplate<String, String>kafkaTemplate;
 
@@ -35,9 +40,9 @@ public class Devs4jTransactionsApplication {
 			containerFactory = "kafkaListenerContainerFactory") //el mismo de la clase KafkaConfiguration
     public void listen(List<ConsumerRecord>messages) throws JsonProcessingException { //inicialmente estaba como List<ConsumerRecord>messages
 
-/*		for (String messsage:messages){ //lo comentó en  Generando transacciones de ejemplo con Java Faker
-			log.info(message);
-		}*/
+//		for (String messsage:messages){ //lo comentó en  Generando transacciones de ejemplo con Java Faker
+//			log.info(message);
+
 
 		for(ConsumerRecord<String,String>message:messages){
 	//		Devs4jTransaction transaction = mapper.readValue(message.value(), Devs4jTransaction.class); //por ahora lo dejó comentado
@@ -45,7 +50,7 @@ public class Devs4jTransactionsApplication {
 		}
 	}
 
-	//diez mil mensajes cada quince segundos
+
 	@Scheduled(fixedRate = 15000)
 	public void sendMessages() throws JsonProcessingException { //Propagacion de excepcion para mapper.writeValueAsString
 		Faker faker = new Faker();
@@ -60,6 +65,8 @@ public class Devs4jTransactionsApplication {
 			kafkaTemplate.send("devs4j-transactions", transaction.getUsername(),mapper.writeValueAsString(transaction));
 		}
 	}
+
+
 
 	public static void main(String[] args) {
 		SpringApplication.run(Devs4jTransactionsApplication.class, args);
